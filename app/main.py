@@ -1,13 +1,13 @@
 import time
 
 import psycopg2
+from decouple import config
 from fastapi import FastAPI
 from psycopg2.extras import RealDictCursor
 
-from app import models
 from app.database.database import engine
 from app.routers import post
-from app.routers.core import user, auth
+from app.routers.core import user, auth, models
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -16,10 +16,10 @@ app = FastAPI()
 while True:
     try:
         conn = psycopg2.connect(
-            host="localhost",
-            database="postgres",
-            user="sieg",
-            password="s13g2002",
+            host=config('DATABASE_HOST'),
+            database=config('DATABASE_NAME'),
+            user=config('DATABASE_USER'),
+            password=config('DATABASE_PASSWORD'),
             cursor_factory=RealDictCursor
         )
         cursor = conn.cursor()

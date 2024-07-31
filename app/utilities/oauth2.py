@@ -1,17 +1,18 @@
 from datetime import timedelta, datetime, timezone
 
+from decouple import config
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from starlette import status
 
-from app import models
-from app.database import get_db
-from app.schemas import TokenData
+from app.database.database import get_db
+from app.routers.core.models import User
+from app.routers.core.responses import TokenData
 
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-ALGORITHM = "HS256"
+SECRET_KEY = config('SECRET_KEY')
+ALGORITHM = config('ALGORITHM')
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -47,6 +48,6 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
                                           headers={"WWW-Authenticate": "Bearer"})
 
     token = verify_access_token(token, credentials_exception)
-    user = db.query(models.User).filter(models.User.id == token.id).first()
+    user = db.query(User).filter(User.id == token.id).first()
 
     return user
