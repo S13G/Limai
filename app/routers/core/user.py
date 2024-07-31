@@ -6,7 +6,7 @@ from app.database.database import get_db
 from app.routers.core.models import User
 from app.routers.core.responses import UserOut
 from app.routers.core.schemas import UserCreate
-from app.utilities.utils import hash_pass
+from app.utilities.utils import hash_password
 
 router = APIRouter(
     prefix="/users",
@@ -21,7 +21,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == user.email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User with that email already exists")
 
-    hashed_password = hash_pass(user.password)
+    hashed_password = hash_password(user.password)
     user.password = hashed_password
 
     new_user = User(**user.model_dump())
