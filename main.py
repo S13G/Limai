@@ -6,8 +6,8 @@ from fastapi import FastAPI
 from psycopg2.extras import RealDictCursor
 
 from app.database.database import engine
-from app.routers import post
-from app.routers.core import user, auth, models
+from app.routers.core import user, auth
+from app.routers.post import post
 
 models.Base.metadata.create_all(bind=engine)
 
