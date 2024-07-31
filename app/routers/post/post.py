@@ -7,6 +7,7 @@ from starlette.responses import Response
 
 from app.database.database import get_db
 from app.routers.post.models import Post
+from app.routers.post.responses import PostResponse
 from app.routers.post.schemas import PostCreate
 from app.utilities import oauth2
 
@@ -16,13 +17,13 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[Post])
+@router.get("/", response_model=List[PostResponse])
 def get_posts(db: Session = Depends(get_db), current_user=Depends(oauth2.get_current_user)):
     posts = db.query(Post).all()
     return posts
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED, response_model=Post)
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=PostResponse)
 def create_posts(post: PostCreate, db: Session = Depends(get_db), current_user=Depends(oauth2.get_current_user)):
     new_post = Post(**post.model_dump())
 
@@ -33,7 +34,7 @@ def create_posts(post: PostCreate, db: Session = Depends(get_db), current_user=D
     return new_post
 
 
-@router.get("/{post_id}", response_model=Post)
+@router.get("/{post_id}", response_model=PostResponse)
 def get_post(post_id: int, db: Session = Depends(get_db), current_user=Depends(oauth2.get_current_user)):
     post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
@@ -53,7 +54,7 @@ def delete_post(post_id: int, db: Session = Depends(get_db), current_user=Depend
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put('/{post_id}', status_code=status.HTTP_202_ACCEPTED, response_model=Post)
+@router.put('/{post_id}', status_code=status.HTTP_202_ACCEPTED, response_model=PostResponse)
 def update_post(post_id: int, updated_post: PostCreate, db: Session = Depends(get_db),
                 current_user=Depends(oauth2.get_current_user)):
     post_query = db.query(Post).filter(Post.id == post_id)
