@@ -8,7 +8,7 @@ def hash_password(password):
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(password=pwd_bytes, salt=salt)
     # Encode to base64 for safe storage as string
-    encoded_hashed_password = base64.b64encode(hashed_password).decode('utf-8')
+    encoded_hashed_password = base64.b64encode(hashed_password).decode()
     return encoded_hashed_password
 
 
