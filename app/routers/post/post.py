@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
@@ -18,14 +18,15 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[PostResponse])
-def get_posts(db: Session = Depends(get_db), current_user=Depends(oauth2.get_current_user)):
-    posts = db.query(Post).all()
+def get_posts(db: Session = Depends(get_db), current_user=Depends(oauth2.get_current_user), limit: int = 10,
+              skip: int = 0, search: Optional[str] = ""):
+    posts = db.query(Post).filter(Post.title.contains(search)).limit(limit).offset(skip).all()
     return posts
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=PostResponse)
 def create_posts(post: PostCreate, db: Session = Depends(get_db), current_user=Depends(oauth2.get_current_user)):
-    new_post = Post(**post.model_dump())
+    new_post = Post(owner_id=current_user.id, **post.model_dump())
 
     db.add(new_post)  # create
     db.commit()  # save to db
@@ -37,19 +38,26 @@ def create_posts(post: PostCreate, db: Session = Depends(get_db), current_user=D
 @router.get("/{post_id}", response_model=PostResponse)
 def get_post(post_id: int, db: Session = Depends(get_db), current_user=Depends(oauth2.get_current_user)):
     post = db.query(Post).filter(Post.id == post_id).first()
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+
     return post
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(post_id: int, db: Session = Depends(get_db), current_user=Depends(oauth2.get_current_user)):
-    post = db.query(Post).filter(Post.id == post_id)
+    post_query = db.query(Post).filter(Post.id == post_id)
 
-    if post.first() is None:
+    post = post_query.first()
+
+    if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
 
-    post.delete(synchronize_session=False)
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not authorized to perform requested action")
+
+    post_query.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
