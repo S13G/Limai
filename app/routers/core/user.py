@@ -8,18 +8,18 @@ from app.routers.core.responses import UserOut
 from app.routers.core.schemas import UserCreate
 from app.utilities.utils import hash_password
 
-router = APIRouter(
-    prefix="/users",
-    tags=["User"]
-)
+router = APIRouter(prefix="/users", tags=["User"])
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED, response_model=UserOut)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserOut)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     user.email = user.email.lower()
 
     if db.query(User).filter(User.email == user.email).first():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User with that email already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with that email already exists",
+        )
 
     hashed_password = hash_password(user.password)
     user.password = hashed_password
@@ -35,5 +35,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     return user
